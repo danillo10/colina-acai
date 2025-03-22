@@ -8,6 +8,8 @@ class Adicional extends Model
 {
     public $timestamps = false;
 
+    protected $table = 'adicionais';
+
     protected $fillable = [
         'nome',
         'preco'
