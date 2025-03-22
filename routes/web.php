@@ -1,17 +1,17 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use App\Http\Controllers\VendaController;
 use App\Http\Controllers\ProdutoController;
 use App\Http\Controllers\AdicionalController;
-use App\Http\Middleware\VerifyCsrfToken;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-// Agrupa todas as rotas sem o middleware de CSRF
-Route::withoutMiddleware([VerifyCsrfToken::class])->group(function () {
+// Agrupa as rotas e remove o middleware CSRF
+Route::withoutMiddleware([ValidateCsrfToken::class])->group(function () {
 
     // Rotas para Produtos
     Route::get('/produtos', [ProdutoController::class, 'index']);       // Listar produtos
