@@ -33,4 +33,5 @@ Route::withoutMiddleware([ValidateCsrfToken::class])->group(function () {
     Route::post('/vendas', [VendaController::class, 'store']);                // Criar venda
     Route::put('/vendas/{id}', [VendaController::class, 'update']);             // Atualizar venda
     Route::delete('/vendas/{id}', [VendaController::class, 'destroy']);         // Deletar venda
+    Route::get('/vendas/summary', [VendaController::class, 'summary']);
 });
