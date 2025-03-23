@@ -162,4 +162,33 @@ class VendaController extends Controller
         $venda->delete();
         return response()->json(['message' => 'Venda deletada com sucesso!']);
     }
+
+    /**
+     * Retorna um resumo das vendas: total de vendas, soma dos valores e últimas vendas.
+     */
+    public function summary()
+    {
+        // Total de vendas e soma dos valores
+        $totalSales = Venda::count();
+        $totalValue = Venda::sum('valor_total');
+
+        // Buscar as últimas 5 vendas com os relacionamentos (produto e adicionais)
+        $latestSales = Venda::with(['produto', 'adicionais'])
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // Adiciona o status padrão "Em preparo" para cada venda (caso não exista uma coluna 'status')
+        $latestSales->transform(function ($sale) {
+            // Se você tiver uma coluna 'status' no banco, remova ou ajuste essa linha
+            $sale->status = "Em preparo";
+            return $sale;
+        });
+
+        return response()->json([
+            'total_sales_count' => $totalSales,
+            'total_sales_value' => $totalValue,
+            'latest_sales'      => $latestSales
+        ]);
+    }
 }
