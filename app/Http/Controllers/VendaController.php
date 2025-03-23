@@ -40,7 +40,7 @@ class VendaController extends Controller
             'numero' => 'required|string',
             'complemento' => 'nullable|string',
             'bairro' => 'required|string',
-            'forma_pagamento' => 'required|in:credit,debit,cash',
+            'forma_pagamento' => 'required|in:credit,debit,cash,pix',
             'troco' => 'nullable|numeric',
             'entrega' => 'required|boolean'
         ]);
