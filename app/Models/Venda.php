@@ -29,4 +29,10 @@ class Venda extends Model
     {
         return $this->belongsToMany(Adicional::class, 'venda_adicionais', 'venda_id', 'adicional_id');
     }
+
+    public function vendaProdutos()
+    {
+        return $this->hasMany(VendaProduto::class, 'venda_id');
+    }
+
 }
