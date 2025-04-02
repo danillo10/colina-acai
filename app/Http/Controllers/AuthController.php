@@ -15,55 +15,88 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        // Validação dos dados
-        $validator = Validator::make($request->all(), [
-            'nome_pessoa'      => 'nullable|string|max:255',
-            'nome_empresa'     => 'nullable|string|max:255',
-            'cpf_cnpj'         => 'required|string|max:20|unique:users,cpf_cnpj',
-            'telefone'         => 'nullable|string|max:20',
-            'email'            => 'required|string|email|max:255|unique:users',
-            'password'         => 'required|string|min:8|confirmed',
-        ]);
+        $messages = [
+            'nome_pessoa.string'      => 'O nome da pessoa deve ser um texto válido.',
+            'nome_empresa.string'     => 'O nome da empresa deve ser um texto válido.',
+            'cpf_cnpj.required'       => 'O campo CPF/CNPJ é obrigatório.',
+            'cpf_cnpj.string'         => 'O campo CPF/CNPJ deve ser um texto.',
+            'cpf_cnpj.unique'         => 'Este CPF/CNPJ já está em uso.',
+            'telefone.string'         => 'O telefone deve ser um texto válido.',
+            'email.required'          => 'O e-mail é obrigatório.',
+            'email.email'             => 'Informe um e-mail válido.',
+            'email.unique'            => 'Este e-mail já está em uso.',
+            'password.required'       => 'A senha é obrigatória.',
+            'password.min'            => 'A senha deve ter no mínimo :min caracteres.',
+            'password.confirmed'      => 'A confirmação da senha não confere.',
+        ];
+
+        $validator = \Validator::make($request->all(), [
+            'nome_pessoa'   => 'nullable|string|max:255',
+            'nome_empresa'  => 'nullable|string|max:255',
+            'cpf_cnpj'      => 'required|string|max:20|unique:users,cpf_cnpj',
+            'telefone'      => 'nullable|string|max:20',
+            'email'         => 'required|string|email|max:255|unique:users',
+            'password'      => 'required|string|min:8|confirmed',
+        ], $messages);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors()
+            ], 422);
         }
 
-        // Criação do usuário
-        $user = User::create([
+        $user = \App\Models\User::create([
             'nome_pessoa'  => $request->nome_pessoa,
             'nome_empresa' => $request->nome_empresa,
             'cpf_cnpj'     => $request->cpf_cnpj,
             'telefone'     => $request->telefone,
             'email'        => $request->email,
-            'password'     => Hash::make($request->password),
+            'password'     => \Illuminate\Support\Facades\Hash::make($request->password),
         ]);
 
-        // Gera o token JWT para o usuário
-        $token = JWTAuth::fromUser($user);
+        // Se estiver utilizando JWT, gere o token
+        $token = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($user);
 
         return response()->json([
-            'user'  => $user,
-            'token' => $token
+            'success' => true,
+            'user'    => $user,
+            'token'   => $token
         ], 201);
     }
+
+
 
     /**
      * Realiza o login e retorna um token JWT.
      */
     public function login(Request $request)
     {
-        $credentials = $request->only('email', 'password');
+        $messages = [
+            'email.required'    => 'O e-mail é obrigatório.',
+            'email.email'       => 'Informe um e-mail válido.',
+            'password.required' => 'A senha é obrigatória.',
+        ];
 
-        if (!$token = auth('api')->attempt($credentials)) {
-            return response()->json(['error' => 'Credenciais inválidas'], 401);
+        $credentials = $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required',
+        ], $messages);
+
+        if (!$token = auth()->attempt($credentials)) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'As credenciais não correspondem aos nossos registros.'
+            ], 401);
         }
 
         return response()->json([
-            'token' => $token,
-            'user'  => auth('api')->user()
+            'success' => true,
+            'token'   => $token,
+            'user'    => auth()->user()
         ]);
     }
+
 
     /**
      * Realiza o logout invalidando o token.
