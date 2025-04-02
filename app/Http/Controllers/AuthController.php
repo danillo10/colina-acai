@@ -127,13 +127,14 @@ class AuthController extends Controller
             'nome_empresa.string'  => 'O nome da empresa deve ser um texto válido.',
             'telefone.string'      => 'O telefone deve ser um texto válido.',
             'tag_name.unique'      => 'Este @ da loja já está em uso.',
+            'tag_name.string'      => 'O @ da loja deve ser um texto válido.',
         ];
 
         $data = $request->validate([
             'nome_pessoa'  => 'nullable|string|max:255',
             'nome_empresa' => 'nullable|string|max:255',
-            'telefone'     => 'nullable|string|max:20',
-            'tag_name'     => 'nullable|string|unique:users,tag_name,' . $user->id,
+            'telefone'     => 'string|max:20',
+            'tag_name'     => 'string|unique:users,tag_name,' . $user->id,
         ], $messages);
 
         $user->update($data);
