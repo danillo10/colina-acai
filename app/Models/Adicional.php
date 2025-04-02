@@ -12,11 +12,17 @@ class Adicional extends Model
 
     protected $fillable = [
         'nome',
-        'preco'
+        'preco',
+        'user_id'
     ];
 
     public function vendas()
     {
         return $this->belongsToMany(Venda::class, 'venda_adicionais', 'adicional_id', 'venda_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 }

@@ -10,11 +10,17 @@ class Produto extends Model
 
     protected $fillable = [
         'nome',
-        'preco'
+        'preco',
+        'user_id'
     ];
 
     public function vendas()
     {
         return $this->hasMany(Venda::class, 'produto_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 }

@@ -17,7 +17,8 @@ class Venda extends Model
         'complemento',
         'bairro',
         'valor_total',
-        'entrega'
+        'entrega',
+        'user_id'
     ];
 
     public function produto()
@@ -33,6 +34,11 @@ class Venda extends Model
     public function vendaProdutos()
     {
         return $this->hasMany(VendaProduto::class, 'venda_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 
 }

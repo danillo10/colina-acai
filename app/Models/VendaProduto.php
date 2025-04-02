@@ -8,7 +8,11 @@ class VendaProduto extends Model
 {
     protected $table = 'venda_produtos';
     public $timestamps = false;
-    protected $fillable = ['venda_id', 'produto_id'];
+    protected $fillable = [
+        'venda_id',
+        'produto_id',
+        'user_id'
+    ];
 
     public function produto()
     {
@@ -18,5 +22,10 @@ class VendaProduto extends Model
     public function adicionais()
     {
         return $this->belongsToMany(\App\Models\Adicional::class, 'venda_produto_adicionais', 'venda_produto_id', 'adicional_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 }
