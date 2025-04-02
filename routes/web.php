@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\TagNameController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use App\Http\Controllers\VendaController;
@@ -16,6 +17,7 @@ Route::withoutMiddleware([ValidateCsrfToken::class])->group(function () {
 
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/check-tag-name/{tag_name}', [TagNameController::class, 'checkTagName']);
 
     // Rotas protegidas usando o middleware "auth"
     Route::middleware(['auth'])->group(function () {
