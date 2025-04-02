@@ -47,5 +47,6 @@ Route::withoutMiddleware([ValidateCsrfToken::class])->group(function () {
         // Rotas adicionais, por exemplo:
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
+        Route::middleware('auth')->put('/user/update', [AuthController::class, 'updateUser']);
     });
 });

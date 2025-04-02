@@ -114,4 +114,34 @@ class AuthController extends Controller
     {
         return response()->json(auth()->user());
     }
+
+     /**
+     * Atualiza os dados do usuário autenticado.
+     */
+    public function updateUser(Request $request)
+    {
+        $user = auth()->user();
+
+        $messages = [
+            'nome_pessoa.string'   => 'O nome da pessoa deve ser um texto válido.',
+            'nome_empresa.string'  => 'O nome da empresa deve ser um texto válido.',
+            'telefone.string'      => 'O telefone deve ser um texto válido.',
+            'tag_name.unique'      => 'Este @ da loja já está em uso.',
+        ];
+
+        $data = $request->validate([
+            'nome_pessoa'  => 'nullable|string|max:255',
+            'nome_empresa' => 'nullable|string|max:255',
+            'telefone'     => 'nullable|string|max:20',
+            'tag_name'     => 'nullable|string|unique:users,tag_name,' . $user->id,
+        ], $messages);
+
+        $user->update($data);
+
+        return response()->json([
+            'success' => true,
+            'user'    => $user,
+            'message' => 'Usuário atualizado com sucesso.'
+        ]);
+    }
 }
