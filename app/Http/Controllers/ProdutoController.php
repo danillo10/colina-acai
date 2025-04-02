@@ -7,14 +7,14 @@ use Illuminate\Http\Request;
 
 class ProdutoController extends Controller
 {
-    // Listar todos os produtos
+    // Listar todos os produtos do usuário logado
     public function index()
     {
-        $produtos = Produto::all();
+        $produtos = Produto::where('user_id', auth()->id())->get();
         return response()->json($produtos);
     }
 
-    // Criar um novo produto
+    // Criar um novo produto vinculado ao usuário logado
     public function store(Request $request)
     {
         $request->validate([
@@ -22,15 +22,18 @@ class ProdutoController extends Controller
             'preco' => 'required|numeric',
         ]);
 
-        $produto = Produto::create($request->only('nome', 'preco'));
+        $data = $request->only('nome', 'preco');
+        $data['user_id'] = auth()->id();
+
+        $produto = Produto::create($data);
 
         return response()->json($produto, 201);
     }
 
-    // Visualizar um produto específico
+    // Visualizar um produto específico do usuário logado
     public function show($id)
     {
-        $produto = Produto::find($id);
+        $produto = Produto::where('user_id', auth()->id())->find($id);
 
         if (!$produto) {
             return response()->json(['error' => 'Produto não encontrado'], 404);
@@ -39,10 +42,10 @@ class ProdutoController extends Controller
         return response()->json($produto);
     }
 
-    // Atualizar um produto existente
+    // Atualizar um produto existente do usuário logado
     public function update(Request $request, $id)
     {
-        $produto = Produto::find($id);
+        $produto = Produto::where('user_id', auth()->id())->find($id);
 
         if (!$produto) {
             return response()->json(['error' => 'Produto não encontrado'], 404);
@@ -58,10 +61,10 @@ class ProdutoController extends Controller
         return response()->json($produto);
     }
 
-    // Deletar um produto
+    // Deletar um produto do usuário logado
     public function destroy($id)
     {
-        $produto = Produto::find($id);
+        $produto = Produto::where('user_id', auth()->id())->find($id);
 
         if (!$produto) {
             return response()->json(['error' => 'Produto não encontrado'], 404);

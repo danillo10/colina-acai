@@ -7,24 +7,24 @@ use Illuminate\Http\Request;
 
 class AdicionalController extends Controller
 {
-    // Listar todos os adicionais
+    // Listar todos os adicionais do usuário logado
     public function index()
     {
-        $adicionais = Adicional::all();
+        $adicionais = Adicional::where('user_id', auth()->id())->get();
         return response()->json($adicionais);
     }
 
-    // Visualizar detalhes de um adicional específico
+    // Visualizar detalhes de um adicional específico do usuário logado
     public function show($id)
     {
-        $adicional = Adicional::find($id);
+        $adicional = Adicional::where('user_id', auth()->id())->find($id);
         if (!$adicional) {
             return response()->json(['error' => 'Adicional não encontrado'], 404);
         }
         return response()->json($adicional);
     }
 
-    // Criar um novo adicional
+    // Criar um novo adicional vinculado ao usuário logado
     public function store(Request $request)
     {
         $validatedData = $request->validate([
@@ -32,15 +32,18 @@ class AdicionalController extends Controller
             'preco' => 'required|numeric',
         ]);
 
+        // Associa o adicional ao usuário logado
+        $validatedData['user_id'] = auth()->id();
+
         $adicional = Adicional::create($validatedData);
 
         return response()->json($adicional, 201);
     }
 
-    // Atualizar um adicional existente
+    // Atualizar um adicional existente do usuário logado
     public function update(Request $request, $id)
     {
-        $adicional = Adicional::find($id);
+        $adicional = Adicional::where('user_id', auth()->id())->find($id);
         if (!$adicional) {
             return response()->json(['error' => 'Adicional não encontrado'], 404);
         }
@@ -55,10 +58,10 @@ class AdicionalController extends Controller
         return response()->json($adicional);
     }
 
-    // Deletar um adicional
+    // Deletar um adicional do usuário logado
     public function destroy($id)
     {
-        $adicional = Adicional::find($id);
+        $adicional = Adicional::where('user_id', auth()->id())->find($id);
         if (!$adicional) {
             return response()->json(['error' => 'Adicional não encontrado'], 404);
         }
