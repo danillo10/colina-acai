@@ -252,4 +252,28 @@ class VendaController extends Controller
         ]);
     }
 
+    /**
+     * Retorna o histórico de status de uma venda do usuário logado.
+     */
+    public function statusHistory($id)
+    {
+        // Verifica se a venda pertence ao usuário logado
+        $venda = \App\Models\Venda::where('user_id', auth()->id())->find($id);
+        if (!$venda) {
+            return response()->json(['error' => 'Venda não encontrada'], 404);
+        }
+
+        // Busca o histórico dos status para essa venda, ordenado pela data de criação
+        $history = \DB::table('venda_status_histories')
+            ->where('venda_id', $id)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return response()->json([
+            'venda'          => $venda,
+            'status_history' => $history
+        ]);
+    }
+
+
 }

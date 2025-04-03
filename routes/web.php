@@ -43,11 +43,12 @@ Route::withoutMiddleware([ValidateCsrfToken::class])->group(function () {
         Route::post('/vendas', [VendaController::class, 'store']);                // Criar venda
         Route::put('/vendas/{id}', [VendaController::class, 'update']);             // Atualizar venda
         Route::delete('/vendas/{id}', [VendaController::class, 'destroy']);
-        Route::middleware('auth')->put('/vendas/{id}/status', [VendaController::class, 'updateStatus']);         // Deletar venda
+        Route::put('/vendas/{id}/status', [VendaController::class, 'updateStatus']);
+        Route::get('/vendas/{id}/status-history', [VendaController::class, 'statusHistory']);
 
         // Rotas adicionais, por exemplo:
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
-        Route::middleware('auth')->put('/user/update', [AuthController::class, 'updateUser']);
+        Route::put('/user/update', [AuthController::class, 'updateUser']);
     });
 });
