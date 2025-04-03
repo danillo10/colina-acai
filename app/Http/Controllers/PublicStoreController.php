@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Produto;
 use App\Models\Adicional;
+use App\Models\Venda;
 use Illuminate\Http\Request;
 
 class PublicStoreController extends Controller
