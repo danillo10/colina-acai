@@ -38,119 +38,130 @@ class VendaController extends Controller
     }
 
     /**
-     * Criar uma nova venda com múltiplos produtos e adicionais vinculados ao usuário logado.
-     *
-     * Exemplo de payload JSON:
-     * {
-     *   "nome_cliente": "Maria Oliveira",
-     *   "whatsapp": "11988887777",
-     *   "rua": "Avenida Central",
-     *   "numero": "456",
-     *   "complemento": "Apto 202",
-     *   "bairro": "Centro",
-     *   "forma_pagamento": "cash",
-     *   "troco": "30.00",
-     *   "entrega": true,
-     *   "produtos": [
-     *      { "produto_id": 1, "adicionais": [2, 3] },
-     *      { "produto_id": 4, "adicionais": [1, 4] }
-     *   ]
-     * }
-     */
-    public function store(Request $request)
-    {
-        // Validação dos dados enviados
-        $validatedData = $request->validate([
-            'nome_cliente'             => 'required|string',
-            'whatsapp'                 => 'required|string',
-            'rua'                      => 'required|string',
-            'numero'                   => 'required|string',
-            'complemento'              => 'nullable|string',
-            'bairro'                   => 'required|string',
-            'forma_pagamento'          => 'required|in:credit,debit,cash,pix',
-            'troco'                    => 'nullable|numeric',
-            'entrega'                  => 'required|boolean',
-            'produtos'                 => 'required|array|min:1',
-            'produtos.*.produto_id'    => 'required|exists:produtos,id',
-            'produtos.*.adicionais'    => 'nullable|array',
-            'produtos.*.adicionais.*'  => 'exists:adicionais,id'
-        ]);
-
-        DB::beginTransaction();
-        try {
-            $total = 0;
-
-            // Cria a venda com dados gerais (valor_total será atualizado) e vincula ao usuário logado
-            $venda = Venda::create([
-                'nome_cliente'    => $validatedData['nome_cliente'],
-                'whatsapp'        => $validatedData['whatsapp'],
-                'rua'             => $validatedData['rua'],
-                'numero'          => $validatedData['numero'],
-                'complemento'     => $validatedData['complemento'] ?? null,
-                'bairro'          => $validatedData['bairro'],
-                'forma_pagamento' => $validatedData['forma_pagamento'],
-                'troco'           => $validatedData['troco'] ?? null,
-                'entrega'         => $validatedData['entrega'],
-                'valor_total'     => 0,  // Valor provisório, será atualizado
-                'status'          => 'Em preparo',
-                'user_id'         => auth()->id(),
+         * Criar uma nova venda com múltiplos produtos e adicionais vinculados ao usuário logado.
+         *
+         * Exemplo de payload JSON:
+         * {
+         *   "nome_cliente": "Maria Oliveira",
+         *   "whatsapp": "11988887777",
+         *   "rua": "Avenida Central",
+         *   "numero": "456",
+         *   "complemento": "Apto 202",
+         *   "bairro": "Centro",
+         *   "forma_pagamento": "cash",
+         *   "troco": "30.00",
+         *   "entrega": true,
+         *   "produtos": [
+         *      { "produto_id": 1, "adicionais": [2, 3] },
+         *      { "produto_id": 4, "adicionais": [1, 4] }
+         *   ]
+         * }
+         */
+        public function store(Request $request)
+        {
+            // Validação dos dados enviados
+            $validatedData = $request->validate([
+                'nome_cliente'             => 'required|string',
+                'whatsapp'                 => 'required|string',
+                'rua'                      => 'required|string',
+                'numero'                   => 'required|string',
+                'complemento'              => 'nullable|string',
+                'bairro'                   => 'required|string',
+                'forma_pagamento'          => 'required|in:credit,debit,cash,pix',
+                'troco'                    => 'nullable|numeric',
+                'entrega'                  => 'required|boolean',
+                'produtos'                 => 'required|array|min:1',
+                'produtos.*.produto_id'    => 'required|exists:produtos,id',
+                'produtos.*.adicionais'    => 'nullable|array',
+                'produtos.*.adicionais.*'  => 'exists:adicionais,id'
             ]);
 
-            // Processa cada produto enviado
-            foreach ($validatedData['produtos'] as $item) {
-                // Busca o produto que pertença ao usuário logado
-                $produto = Produto::where('user_id', auth()->id())
-                    ->find($item['produto_id']);
-                if (!$produto) {
-                    throw new Exception("Produto com ID {$item['produto_id']} não encontrado.");
-                }
-                // Soma o preço do produto
-                $total += $produto->preco;
+            DB::beginTransaction();
+            try {
+                $total = 0;
 
-                // Cria o registro na tabela venda_produtos, vinculando o usuário se necessário
-                $vendaProduto = VendaProduto::create([
-                    'venda_id'   => $venda->id,
-                    'produto_id' => $produto->id,
-                    'user_id'    => auth()->id(), // se necessário
+                // Cria a venda com dados gerais, valor_total provisório e status inicial "Aguardando"
+                $venda = \App\Models\Venda::create([
+                    'nome_cliente'    => $validatedData['nome_cliente'],
+                    'whatsapp'        => $validatedData['whatsapp'],
+                    'rua'             => $validatedData['rua'],
+                    'numero'          => $validatedData['numero'],
+                    'complemento'     => $validatedData['complemento'] ?? null,
+                    'bairro'          => $validatedData['bairro'],
+                    'forma_pagamento' => $validatedData['forma_pagamento'],
+                    'troco'           => $validatedData['troco'] ?? null,
+                    'entrega'         => $validatedData['entrega'],
+                    'valor_total'     => 0,  // Valor provisório, será atualizado
+                    'status'          => 'Aguardando',
+                    'user_id'         => auth()->id(),
                 ]);
 
-                // Se houver adicionais para este produto, processa-os
-                if (isset($item['adicionais']) && is_array($item['adicionais'])) {
-                    $adicionais = Adicional::where('user_id', auth()->id())
-                        ->whereIn('id', $item['adicionais'])
-                        ->get();
-                    foreach ($adicionais as $adicional) {
-                        $total += $adicional->preco;
-                        // Insere o registro na tabela pivot venda_produto_adicionais
-                        DB::table('venda_produto_adicionais')->insert([
-                            'venda_produto_id' => $vendaProduto->id,
-                            'adicional_id'     => $adicional->id,
-                        ]);
+                // Processa cada produto enviado
+                foreach ($validatedData['produtos'] as $item) {
+                    // Busca o produto que pertença ao usuário logado
+                    $produto = Produto::where('user_id', auth()->id())
+                        ->find($item['produto_id']);
+                    if (!$produto) {
+                        throw new Exception("Produto com ID {$item['produto_id']} não encontrado.");
+                    }
+                    // Soma o preço do produto
+                    $total += $produto->preco;
+
+                    // Cria o registro na tabela venda_produtos, vinculando o usuário
+                    $vendaProduto = VendaProduto::create([
+                        'venda_id'   => $venda->id,
+                        'produto_id' => $produto->id,
+                        'user_id'    => auth()->id(),
+                    ]);
+
+                    // Se houver adicionais para este produto, processa-os
+                    if (isset($item['adicionais']) && is_array($item['adicionais'])) {
+                        $adicionais = \App\Models\Adicional::where('user_id', auth()->id())
+                            ->whereIn('id', $item['adicionais'])
+                            ->get();
+                        foreach ($adicionais as $adicional) {
+                            $total += $adicional->preco;
+                            // Insere o registro na tabela pivot venda_produto_adicionais
+                            DB::table('venda_produto_adicionais')->insert([
+                                'venda_produto_id' => $vendaProduto->id,
+                                'adicional_id'     => $adicional->id,
+                            ]);
+                        }
                     }
                 }
+
+                // Atualiza o valor total da venda
+                $venda->valor_total = $total;
+                $venda->save();
+
+                // Registra o histórico inicial do status (old_status é nulo)
+                DB::table('venda_status_histories')->insert([
+                    'venda_id'   => $venda->id,
+                    'old_status' => null,
+                    'new_status' => $venda->status,
+                    'changed_by' => auth()->id(),
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+
+                DB::commit();
+
+                // Carrega os relacionamentos para retorno
+                $venda->load(['vendaProdutos.produto', 'vendaProdutos.adicionais']);
+
+                return response()->json([
+                    'message' => 'Venda registrada com sucesso!',
+                    'venda'   => $venda
+                ], 201);
+            } catch (Exception $e) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'Erro ao registrar venda.',
+                    'error'   => $e->getMessage()
+                ], 500);
             }
-
-            // Atualiza o valor total da venda
-            $venda->valor_total = $total;
-            $venda->save();
-
-            DB::commit();
-
-            // Carrega os relacionamentos para retorno
-            $venda->load(['vendaProdutos.produto', 'vendaProdutos.adicionais']);
-
-            return response()->json([
-                'message' => 'Venda registrada com sucesso!',
-                'venda'   => $venda
-            ], 201);
-        } catch (Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'message' => 'Erro ao registrar venda.',
-                'error'   => $e->getMessage()
-            ], 500);
         }
-    }
+
 
     /**
      * Atualizar uma venda existente (apenas dados gerais) do usuário logado.
