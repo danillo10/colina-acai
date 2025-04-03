@@ -42,4 +42,36 @@ class PublicStoreController extends Controller
             'adicionais' => $adicionais
         ]);
     }
+
+    /**
+     * Retorna o histórico de status de uma venda para o público,
+     * verificando que a venda pertence à loja identificada pelo tag_name.
+     *
+     * Exemplo de URL: GET /@minhatag/sale/123/status-history
+     */
+    public function saleStatusHistory($tag_name, $sale_id)
+    {
+        // Busca a loja pelo tag_name
+        $store = User::where('tag_name', $tag_name)->first();
+        if (!$store) {
+            return response()->json(['error' => 'Loja não encontrada'], 404);
+        }
+
+        // Busca a venda que pertença a essa loja
+        $sale = Venda::where('user_id', $store->id)->find($sale_id);
+        if (!$sale) {
+            return response()->json(['error' => 'Venda não encontrada para esta loja'], 404);
+        }
+
+        // Busca o histórico de status da venda
+        $history = \DB::table('venda_status_histories')
+            ->where('venda_id', $sale->id)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return response()->json([
+            'sale'           => $sale,
+            'status_history' => $history
+        ]);
+    }
 }
