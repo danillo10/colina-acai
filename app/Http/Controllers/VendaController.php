@@ -227,4 +227,29 @@ class VendaController extends Controller
             'latest_sales'      => $latestSales
         ]);
     }
+
+    /**
+        * Atualiza somente o status de uma venda do usuário logado.
+    */
+    public function updateStatus(Request $request, $id)
+    {
+        $venda = Venda::where('user_id', auth()->id())->find($id);
+        if (!$venda) {
+            return response()->json(['error' => 'Venda não encontrada'], 404);
+        }
+
+        // Validação para garantir que o status enviado seja um dos permitidos
+        $validatedData = $request->validate([
+            'status' => 'required'
+        ]);
+
+        $venda->status = $validatedData['status'];
+        $venda->save();
+
+        return response()->json([
+            'message' => 'Status atualizado com sucesso!',
+            'venda'   => $venda
+        ]);
+    }
+
 }
