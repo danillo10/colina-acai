@@ -7,6 +7,7 @@ use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use App\Http\Controllers\VendaController;
 use App\Http\Controllers\ProdutoController;
 use App\Http\Controllers\AdicionalController;
+use App\Http\Controllers\PublicStoreController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -18,6 +19,7 @@ Route::withoutMiddleware([ValidateCsrfToken::class])->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/check-tag-name/{tag_name}', [TagNameController::class, 'checkTagName']);
+    Route::get('/@{tag_name}', [PublicStoreController::class, 'getStoreData']);
 
     // Rotas protegidas usando o middleware "auth"
     Route::middleware(['auth'])->group(function () {
