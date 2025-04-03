@@ -20,6 +20,7 @@ Route::withoutMiddleware([ValidateCsrfToken::class])->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/check-tag-name/{tag_name}', [TagNameController::class, 'checkTagName']);
     Route::get('/@{tag_name}', [PublicStoreController::class, 'getStoreData']);
+    Route::post('/vendas', [VendaController::class, 'store']);                // Criar venda
 
     // Rotas protegidas usando o middleware "auth"
     Route::middleware(['auth'])->group(function () {
@@ -42,7 +43,6 @@ Route::withoutMiddleware([ValidateCsrfToken::class])->group(function () {
         Route::get('/vendas/summary', [VendaController::class, 'summary']);
         Route::get('/vendas', [VendaController::class, 'index']);               // Listar vendas
         Route::get('/vendas/{id}', [VendaController::class, 'show']);             // Visualizar venda
-        Route::post('/vendas', [VendaController::class, 'store']);                // Criar venda
         Route::put('/vendas/{id}', [VendaController::class, 'update']);             // Atualizar venda
         Route::delete('/vendas/{id}', [VendaController::class, 'destroy']);
         Route::put('/vendas/{id}/status', [VendaController::class, 'updateStatus']);
