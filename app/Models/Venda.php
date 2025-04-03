@@ -18,6 +18,7 @@ class Venda extends Model
         'bairro',
         'valor_total',
         'entrega',
+        'status',
         'user_id'
     ];
 
